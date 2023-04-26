@@ -1,5 +1,3 @@
-package asan;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,9 +16,10 @@ public class Main {
 		String Hurl = "https://www.amc.seoul.kr/asan/healthinfo/disease/diseaseList.do?pageIndex=";
 		;
 		String asan = "https://www.amc.seoul.kr";
-		Pattern p = Pattern.compile("[<>A-Za-z가-힣' '0-9'.]");
+		Pattern p = Pattern.compile("[<>A-Za-z가-힣' '0-9'.()]");
 		String[] exceptWords = { "<p>", "<br>", "<strong>", "nbsp", "<span>", "<span stylefontsize 20px>",
-				"<span stylefontsize 18px>", "<div classfrview>", "<li>", "<div>" };
+				"<span stylefontsize 18px>", "<div classfrview>", "<li>", "<div>", "<dd>", "<br >",
+				"<div classinfotext>", "\n", "quot", "middot" };
 		try {
 			URL url, url2;
 			boolean start = true;
@@ -56,6 +55,7 @@ public class Main {
 						}
 						if (sourceLine.contains("contTitle")) {
 							contTitle++;
+							System.out.println("\n질환번호 : " + contTitle);
 							searchStart = true;
 						}
 						if (searchStart) {
@@ -63,22 +63,36 @@ public class Main {
 								url2 = new URL(asan + sourceLine.split("href=\"")[1].split("\"")[0]);
 								BufferedReader br2 = new BufferedReader(new InputStreamReader(url2.openStream()));
 								while ((diseaseLine = br2.readLine()) != null) {
+									String result = "";
 									if (diseaseLine.contains("descDl")) {
 										searchDi = true;
 									}
+
 									if (searchDi) {
 										if (diseaseLine.contains("dt")) {
-											System.out.println(diseaseLine.split(">")[1].split("<")[0]);
+											System.out.println("\n" + diseaseLine.split(">")[1].split("<")[0]);
+										} else if (diseaseLine.contains("</dl>")) {
+											searchDi = false;
 										}
 										if (diseaseLine.contains("<dd>")) {
 											dd = true;
-										} else if (diseaseLine.contains("</p>")) {
+										} else if (diseaseLine.contains("</dd>")) {
 											dd = false;
 										}
-									}
-									if (dd) {
-										String str = diseaseLine.split("\"")[1];
-										System.out.println(str.substring(0, str.length()));
+										if (dd && !diseaseLine.contains("<img")) {
+											Matcher m = p.matcher(diseaseLine);
+											{
+												while (m.find()) {
+													result += m.group();
+												}
+											}
+											for (int i1 = 0; i1 < exceptWords.length; i1++) {
+												if (result.contains(exceptWords[i1])) {
+													result = result.replace(exceptWords[i1], "");
+												}
+											}
+											System.out.print(result);
+										}
 									}
 								}
 							} else if (sourceLine.contains("</strong>")) {
@@ -90,7 +104,7 @@ public class Main {
 				}
 			}
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 	}
 }
