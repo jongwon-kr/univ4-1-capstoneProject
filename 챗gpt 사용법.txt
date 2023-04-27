@@ -1,0 +1,7 @@
+gradle 다운로드
+https://gradle.org/releases/
+OpenAi API key
+https://platform.openai.com/account/api-keys
+
+기타 설명
+https://galid1.tistory.com/500
