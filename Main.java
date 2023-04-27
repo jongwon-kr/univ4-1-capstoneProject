@@ -1,10 +1,38 @@
+package asan;
+
 import java.io.BufferedReader;
-import java.io.IOException;
+
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+class DB_Conn {
+	Connection con = null;
+
+	public DB_Conn() {
+		String url = "jdbc:oracle:thin:@127.0.0.1:1521:XE";
+		String id = "C##hadmin";
+		String password = "1234";
+		try {
+			Class.forName("oracle.jdbc.driver.OracleDriver");
+			System.out.println("드라이버 적재 성공");
+			con = DriverManager.getConnection(url, id, password);
+			System.out.println("DB 연결 성공");
+		} catch (ClassNotFoundException e) {
+			System.out.println("No Driver.");
+		} catch (SQLException e) {
+			System.out.println("Connection Fail");
+		}
+	}
+}
 
 public class Main {
 
@@ -12,6 +40,7 @@ public class Main {
 		int i = 0;
 		int pageIndex = 0;
 		int contTitle = 0;
+		int conIndex = 0;
 		String index = "";
 		String Hurl = "https://www.amc.seoul.kr/asan/healthinfo/disease/diseaseList.do?pageIndex=";
 		;
@@ -19,7 +48,10 @@ public class Main {
 		Pattern p = Pattern.compile("[<>A-Za-z가-힣' '0-9'.()]");
 		String[] exceptWords = { "<p>", "<br>", "<strong>", "nbsp", "<span>", "<span stylefontsize 20px>",
 				"<span stylefontsize 18px>", "<div classfrview>", "<li>", "<div>", "<dd>", "<br >",
-				"<div classinfotext>", "\n", "quot", "middot" };
+				"<div classinfotext>", "\n", "quot", "middot", "<p classtxt>",
+				"<span stylebackgroundcolor rgb(255 255 255)>" };
+		String[] contents = { "정의", "원인", "증상", "진단", "치료", "경과", "주의사항" };
+		String[] contentsInfo = new String[8];
 		try {
 			URL url, url2;
 			boolean start = true;
@@ -27,6 +59,7 @@ public class Main {
 			boolean searchStart = false;
 			boolean searchDi = false;
 			boolean dd = false;
+			boolean conInsert = false;
 			String sourceLine = "";
 			String diseaseLine = "";
 
@@ -54,8 +87,9 @@ public class Main {
 							break;
 						}
 						if (sourceLine.contains("contTitle")) {
-							contTitle++;
 							System.out.println("\n질환번호 : " + contTitle);
+							contentsInfo[0] = String.valueOf(contTitle);
+							contTitle++;
 							searchStart = true;
 						}
 						if (searchStart) {
@@ -65,12 +99,29 @@ public class Main {
 								while ((diseaseLine = br2.readLine()) != null) {
 									String result = "";
 									if (diseaseLine.contains("descDl")) {
+										System.out.println("====================이전 내용====================");
+										for (int l = 0; l < contentsInfo.length; l++) {
+											System.out.println("index(" + l + ") : " + contentsInfo[l]);
+										}
+										System.out.println("=================================================");
+										for (int l = 0; l < contentsInfo.length; l++) {
+											contentsInfo[l] = "";
+										}
 										searchDi = true;
 									}
 
 									if (searchDi) {
 										if (diseaseLine.contains("dt")) {
 											System.out.println("\n" + diseaseLine.split(">")[1].split("<")[0]);
+											for (int k = 0; k < contents.length; k++) {
+												if (diseaseLine.split(">")[1].split("<")[0].contains(contents[k])) {
+													conIndex = k + 1;
+													conInsert = true;
+													break;
+												} else {
+													conInsert = false;
+												}
+											}
 										} else if (diseaseLine.contains("</dl>")) {
 											searchDi = false;
 										}
@@ -80,23 +131,49 @@ public class Main {
 											dd = false;
 										}
 										if (dd && !diseaseLine.contains("<img")) {
-											Matcher m = p.matcher(diseaseLine);
-											{
-												while (m.find()) {
-													result += m.group();
+											if (conInsert) {
+												Matcher m = p.matcher(diseaseLine);
+												{
+													while (m.find()) {
+														contentsInfo[conIndex] += m.group();
+													}
+
 												}
-											}
-											for (int i1 = 0; i1 < exceptWords.length; i1++) {
-												if (result.contains(exceptWords[i1])) {
-													result = result.replace(exceptWords[i1], "");
+												for (int i1 = 0; i1 < exceptWords.length; i1++) {
+													if (contentsInfo[conIndex].contains(exceptWords[i1])) {
+														contentsInfo[conIndex] = contentsInfo[conIndex]
+																.replace(exceptWords[i1], "");
+														result = contentsInfo[conIndex];
+													}
 												}
+												System.out.print(result);
 											}
-											System.out.print(result);
 										}
 									}
 								}
 							} else if (sourceLine.contains("</strong>")) {
 								searchStart = false;
+							}
+							DB_Conn dbc = new DB_Conn();
+							try {
+								Thread.sleep(1000);
+								if (contentsInfo[0] != null) {
+									PreparedStatement pstmt = dbc.con
+											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?)");
+									pstmt.setObject(1, (Object) contentsInfo[0]);
+									pstmt.setObject(2, (Object) contentsInfo[1]);
+									pstmt.setObject(3, (Object) contentsInfo[2]);
+									pstmt.setObject(4, (Object) contentsInfo[3]);
+									pstmt.setObject(5, (Object) contentsInfo[4]);
+									pstmt.setObject(6, (Object) contentsInfo[5]);
+									pstmt.setObject(7, (Object) contentsInfo[6]);
+									pstmt.setObject(8, (Object) contentsInfo[7]);
+									pstmt.executeUpdate();
+									pstmt.close();
+								}
+								dbc.con.close();
+							} catch (SQLException e1) {
+								e1.printStackTrace();
 							}
 						}
 					}
