@@ -1,5 +1,3 @@
-package asan;
-
 import java.io.BufferedReader;
 
 import java.io.InputStreamReader;
@@ -51,7 +49,7 @@ public class Main {
 				"<div classinfotext>", "\n", "quot", "middot", "<p classtxt>",
 				"<span stylebackgroundcolor rgb(255 255 255)>" };
 		String[] contents = { "정의", "원인", "증상", "진단", "치료", "경과", "주의사항" };
-		String[] contentsInfo = new String[8];
+		String[] contentsInfo = new String[9];
 		try {
 			URL url, url2;
 			boolean start = true;
@@ -87,26 +85,35 @@ public class Main {
 							break;
 						}
 						if (sourceLine.contains("contTitle")) {
-							System.out.println("\n질환번호 : " + contTitle);
 							contentsInfo[0] = String.valueOf(contTitle);
 							contTitle++;
 							searchStart = true;
 						}
 						if (searchStart) {
 							if (sourceLine.contains("href")) {
+								System.out.println("\n====================이전 내용====================");
+								for (int l = 0; l < contentsInfo.length; l++) {
+									if (l == 0) {
+										System.out.println("질환번호 : " + contentsInfo[l]);
+									} else if (l == 1) {
+										System.out.println("질환명 : " + contentsInfo[l]);
+									} else {
+										System.out.println(contents[l-2] + " : " + contentsInfo[l]);
+									}
+
+								}
+								System.out.println("===============================================");
+								for (int l = 0; l < contentsInfo.length; l++) {
+									contentsInfo[l] = "";
+								}
+								System.out.println("\n질환번호 : " + contTitle);
+								System.out.println("질환명 : " + sourceLine.split("\">")[1].split("</a>")[0]);
+								contentsInfo[1] = sourceLine.split("\">")[1].split("</a>")[0];
 								url2 = new URL(asan + sourceLine.split("href=\"")[1].split("\"")[0]);
 								BufferedReader br2 = new BufferedReader(new InputStreamReader(url2.openStream()));
 								while ((diseaseLine = br2.readLine()) != null) {
 									String result = "";
 									if (diseaseLine.contains("descDl")) {
-										System.out.println("====================이전 내용====================");
-										for (int l = 0; l < contentsInfo.length; l++) {
-											System.out.println("index(" + l + ") : " + contentsInfo[l]);
-										}
-										System.out.println("=================================================");
-										for (int l = 0; l < contentsInfo.length; l++) {
-											contentsInfo[l] = "";
-										}
 										searchDi = true;
 									}
 
@@ -115,7 +122,7 @@ public class Main {
 											System.out.println("\n" + diseaseLine.split(">")[1].split("<")[0]);
 											for (int k = 0; k < contents.length; k++) {
 												if (diseaseLine.split(">")[1].split("<")[0].contains(contents[k])) {
-													conIndex = k + 1;
+													conIndex = k + 2;
 													conInsert = true;
 													break;
 												} else {
@@ -154,27 +161,28 @@ public class Main {
 							} else if (sourceLine.contains("</strong>")) {
 								searchStart = false;
 							}
-							DB_Conn dbc = new DB_Conn();
-							try {
-								Thread.sleep(1000);
-								if (contentsInfo[0] != null) {
-									PreparedStatement pstmt = dbc.con
-											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?)");
-									pstmt.setObject(1, (Object) contentsInfo[0]);
-									pstmt.setObject(2, (Object) contentsInfo[1]);
-									pstmt.setObject(3, (Object) contentsInfo[2]);
-									pstmt.setObject(4, (Object) contentsInfo[3]);
-									pstmt.setObject(5, (Object) contentsInfo[4]);
-									pstmt.setObject(6, (Object) contentsInfo[5]);
-									pstmt.setObject(7, (Object) contentsInfo[6]);
-									pstmt.setObject(8, (Object) contentsInfo[7]);
-									pstmt.executeUpdate();
-									pstmt.close();
-								}
-								dbc.con.close();
-							} catch (SQLException e1) {
-								e1.printStackTrace();
-							}
+//							DB_Conn dbc = new DB_Conn();
+//							try {
+//								Thread.sleep(1000);
+//								if (contentsInfo[0] != null) {
+//									PreparedStatement pstmt = dbc.con
+//											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?,?)");
+//									pstmt.setObject(1, (Object) contentsInfo[0]);
+//									pstmt.setObject(2, (Object) contentsInfo[1]);
+//									pstmt.setObject(3, (Object) contentsInfo[2]);
+//									pstmt.setObject(4, (Object) contentsInfo[3]);
+//									pstmt.setObject(5, (Object) contentsInfo[4]);
+//									pstmt.setObject(6, (Object) contentsInfo[5]);
+//									pstmt.setObject(7, (Object) contentsInfo[6]);
+//									pstmt.setObject(8, (Object) contentsInfo[7]);
+//									pstmt.setObject(9, (Object) contentsInfo[8]);
+//									pstmt.executeUpdate();
+//									pstmt.close();
+//								}
+//								dbc.con.close();
+//							} catch (SQLException e1) {
+//								e1.printStackTrace();
+//							}
 						}
 					}
 					System.out.println("질환 개수 : " + contTitle);
