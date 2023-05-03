@@ -7,4 +7,4 @@ https://platform.openai.com/account/api-keys
 https://galid1.tistory.com/500
 chatGpt API key
 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
-setx OPENAI_API_KEY “<yourkey>”
+setx OPENAI_API_KEY “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”
