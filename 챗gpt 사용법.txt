@@ -6,8 +6,5 @@ https://platform.openai.com/account/api-keys
 기타 설명
 https://galid1.tistory.com/500
 chatGpt API key
-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
-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
-
-chatgpt api
-https://github.com/TheoKanning/openai-java
+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
+setx OPENAI_API_KEY “<yourkey>”
