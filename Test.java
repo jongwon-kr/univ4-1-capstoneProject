@@ -6,10 +6,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,7 +96,7 @@ public class Test {
 									} else if (l == 1) {
 										System.out.println("질환명 : " + contentsInfo[l]);
 									} else {
-										System.out.println(contents[l-2] + " : " + contentsInfo[l]);
+										System.out.println(contents[l - 2] + " : " + contentsInfo[l]);
 									}
 
 								}
@@ -151,12 +148,10 @@ public class Test {
 													if (contentsInfo[conIndex].contains(exceptWords[i1])) {
 														contentsInfo[conIndex] = contentsInfo[conIndex]
 																.replace(exceptWords[i1], "");
-														result = contentsInfo[conIndex];
 													}
 												}
-												result = result.replaceAll("\\<.*\\>",
-														"");
-												System.out.print(result);
+												contentsInfo[conIndex] = contentsInfo[conIndex].replaceAll("\\<.*\\>", "");
+												System.out.print(contentsInfo[conIndex]);
 											}
 										}
 									}
@@ -166,7 +161,9 @@ public class Test {
 							}
 							DB_Conn dbc = new DB_Conn();
 							try {
-								Thread.sleep(1000);
+								Thread.sleep(100);
+								System.out.println("\n들어간 내용");
+
 								if (contentsInfo[0] != null) {
 									PreparedStatement pstmt = dbc.con
 											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?,?)");
