@@ -33,9 +33,9 @@ class DB_Conn {
 public class Test {
 
 	public static void main(String[] args) throws InterruptedException {
-		int i = 0;
+		int i = 1;
 		int pageIndex = 0;
-		int contTitle = 0;
+		int contTitle = 124;
 		int conIndex = 0;
 		String index = "";
 		String Hurl = "https://www.amc.seoul.kr/asan/healthinfo/disease/diseaseList.do?pageIndex=";
@@ -47,6 +47,8 @@ public class Test {
 				"<div classinfotext>", "\n", "quot", "middot", "<p classtxt>",
 				"<span stylebackgroundcolor rgb(255 255 255)>" };
 		String[] contents = { "정의", "원인", "증상", "진단", "치료", "경과", "주의사항" };
+		String[] bodyparts = { "골반", "귀", "기타", "눈", "다리", "등/허리", "머리", "목", "발", "배", "생식기", "손", "엉덩이", "유방", "입",
+				"전신", "코", "팔", "피부", "가슴", "얼굴" };
 		String[] contentsInfo = new String[9];
 		try {
 			URL url, url2;
@@ -150,7 +152,8 @@ public class Test {
 																.replace(exceptWords[i1], "");
 													}
 												}
-												contentsInfo[conIndex] = contentsInfo[conIndex].replaceAll("\\<.*\\>", "");
+												contentsInfo[conIndex] = contentsInfo[conIndex].replaceAll("\\<.*\\>",
+														"");
 												System.out.print(contentsInfo[conIndex]);
 											}
 										}
@@ -159,6 +162,7 @@ public class Test {
 							} else if (sourceLine.contains("</strong>")) {
 								searchStart = false;
 							}
+							String bodypart = bodyparts[i - 1];
 							DB_Conn dbc = new DB_Conn();
 							try {
 								Thread.sleep(100);
@@ -166,7 +170,7 @@ public class Test {
 
 								if (contentsInfo[0] != null) {
 									PreparedStatement pstmt = dbc.con
-											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?,?)");
+											.prepareStatement("insert into 질환 values(?,?,?,?,?,?,?,?,?,?)");
 									pstmt.setObject(1, (Object) contentsInfo[0]);
 									pstmt.setObject(2, (Object) contentsInfo[1]);
 									pstmt.setObject(3, (Object) contentsInfo[2]);
@@ -176,6 +180,7 @@ public class Test {
 									pstmt.setObject(7, (Object) contentsInfo[6]);
 									pstmt.setObject(8, (Object) contentsInfo[7]);
 									pstmt.setObject(9, (Object) contentsInfo[8]);
+									pstmt.setObject(10, (Object) bodypart);
 									pstmt.executeUpdate();
 									pstmt.close();
 								}
