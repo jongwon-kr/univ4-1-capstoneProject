@@ -5,10 +5,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +50,8 @@ public class Test2 {
 				"그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도",
 				"그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도",
 				"그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도", "그러지 않다고 해도" };
+		// DB에서 문장 가져오기
+		String data[] = new String[2000];
 		DB_Conn dbc = new DB_Conn();
 		try {
 			int dataSize = 0;
@@ -56,27 +60,40 @@ public class Test2 {
 			String query = "select 증상 from 질환";
 			Statement stmt = dbc.con.createStatement();
 			rs = stmt.executeQuery(query);
-			String data[] = new String[2000];
+
 			while (rs.next()) {
-				data[i++] = rs.getString(1);
+				if (rs.getString(1) != null) {
+					data[i++] = rs.getString(1);
+				}
 				System.out.println("증상(" + i + ") : " + data[i - 1]);
-				for (int j = 0; j < postposition.length; j++) {
-					if (data[i - 1].contains(postposition[j])) {
-						data[i - 1] = data[i - 1].replaceAll(postposition[j], "");
-					}
-				}
-				String[] words = data[i - 1].split(" ");
-				Set<String> duplicateWords = new HashSet<>();
-				for (String word : words) {
-					System.out.print(word+" ");
-				}
-				
 			}
 			stmt.close();
 			rs.close();
 			dbc.con.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		List<String> sentences = new ArrayList<String>(Arrays.asList(data));
+		sentences.removeAll(Collections.singletonList(null));
+
+		Set<String> words = new HashSet<>();
+		for (String sentence : sentences) {
+			if(sentence!=null) {
+				words.addAll(Arrays.asList(sentence.split(" ")));
+				System.out.println(words);
+			}
+		}
+
+		Map<String, Integer> wordCounts = new HashMap<>();
+		for (String word : words) {
+			wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+		}
+
+		for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
+			if (entry.getValue() > 1) {
+				System.out.println(entry.getKey() + " - " + entry.getValue());
+			}
 		}
 	}
 }
