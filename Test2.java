@@ -39,11 +39,9 @@ class DB_Conn {
 
 public class Test2 {
 	public static void main(String[] args) throws InterruptedException {
-		String[] postposition = { ".", "이", "가", "께서", "에서", "서", "을", "를", "의", "에", "아", "야", "여", "시여", "은", "는",
-				"도", "만", "마저", "조차", "이나", "과", "입니다." };
+		String[] postposition = { "이", "가", "께서", "에서", "서", "을", "를", "의", "에", "아", "야", "여", "시여", "은", "는", "도",
+				"만", "마저", "조차", "이나", "과", "다.", "과", "암", "닥", "락" };
 		Pattern regex = Pattern.compile("[가-힣 .]");
-		String rg = "";
-		Pattern regex2 = Pattern.compile("^.*." + rg + "$");
 		String data[] = new String[2000];
 		// DB에서 문장 가져오기
 		DB_Conn dbc = new DB_Conn();
@@ -76,16 +74,6 @@ public class Test2 {
 				}
 
 				String result = sb.toString();
-				for (String pp : postposition) {
-					rg = pp;
-					Matcher m = regex2.matcher(result);
-					StringBuffer sb2 = new StringBuffer();
-					while (m.find()) {
-						sb2.append(m.group());
-					}
-					result = sb2.toString();
-				}
-				System.out.println(result);
 				sentences.add(result);
 			}
 		}
@@ -95,9 +83,11 @@ public class Test2 {
 		for (String word : words) {
 			for (String pp : postposition) {
 				if (word.contains(pp)) {
-					word = word.replaceAll(pp, "");
+					word = word.replaceAll(pp + "$", "");
 				}
-				wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+				if (word.length() > 1) {
+					wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+				}
 			}
 		}
 		List<Map.Entry<String, Integer>> entryList = new LinkedList<>(wordCounts.entrySet());
@@ -107,18 +97,18 @@ public class Test2 {
 				return o2.getValue() - o1.getValue();
 			}
 		});
-		String[] popularWords = new String[10];
-		int[] populatwordsCnt = null;
+		String[] popularWords = new String[300];
 		int cnt = 0;
 		for (Map.Entry<String, Integer> entry : entryList) {
-			if (cnt < 10) {
-				popularWords[cnt] = entry.getKey();
-				populatwordsCnt[cnt] = entry.getValue();
+			if (cnt < 300 && entry.getKey().contains("기침")) {
+				popularWords[cnt] = cnt + 1 + ".키워드 : (" + entry.getKey() + ") 중복 횟수 : " + entry.getValue();
+				cnt++;
 			}
-			cnt++;
 		}
-		for (int i = 0; i < 10; i++) {
-			System.out.println(popularWords[i]+" "+populatwordsCnt[i]);
+		for (String keyword : popularWords) {
+			if (keyword != null) {
+				System.out.println(keyword);
+			}
 		}
 	}
 }
