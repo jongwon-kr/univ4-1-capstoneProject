@@ -13,7 +13,7 @@ void setup() {
 void loop() {
   // 센서로부터 데이터를 읽습니다.
   delay(100);
-  int data = analogRead(A0);
+  int data = analogRead(A1);
   // 데이터를 시리얼 모니터에 출력합니다.
   Serial.println(data);
 }
